@@ -22,8 +22,12 @@ const SpeechListener = ({ isListening, onChunk }) => {
                     const now = Date.now();
                     if (now - timeRef.current > 2000) {
                         console.info('swap recorders');
-                        recorderRef.current.swap();
-                        timeRef.current = now;
+                        if (recorderRef.current) {
+                            recorderRef.current.swap();
+                            timeRef.current = now;
+                        } else {
+                            timeRef.current = 0;
+                        }
                     }
                 });
 
@@ -34,7 +38,12 @@ const SpeechListener = ({ isListening, onChunk }) => {
                 };
             }
 
-            isListening ? recorderRef.current.start() : recorderRef.current.stop();
+            if (isListening) {
+                recorderRef.current.start()
+            } else {
+                recorderRef.current.stop();
+                recorderRef.current = null;
+            }
         }
 
         func(isListening);

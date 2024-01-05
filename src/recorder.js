@@ -31,6 +31,10 @@ class Recorder {
         this.recorders.forEach((recorder) => {
             if (recorder.state === 'recording')
                 recorder.stop();
+
+            this.stream.getTracks().forEach((track) => {
+                track.stop();
+            });
         });
     }
 }

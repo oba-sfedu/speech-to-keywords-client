@@ -2,22 +2,33 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, Col, Flex, Row, Typography } from 'antd';
 import { PauseOutlined, CaretRightOutlined } from '@ant-design/icons';
 import { socket } from './socket';
+import { nanoid } from 'nanoid';
 
 import './App.css';
 import SpeechListener from './components/SpeechListener';
 
+const TEXT_STYLE = { color: '#fff' };
+
 const App = () => {
     const [isListening, setListening] = useState(false);
+    const [sessionId, setSessionId] = useState();
     const [isConnected, setIsConnected] = useState(socket.connected);
-    const [content, setContent] = useState([]);
+    const [content, setContent] = useState('');
 
     const onChunk = useCallback((data) => {
-        socket.emit('audio', data);
-    }, []);
+        socket.emit('audio', { sessionId, data });
+    }, [sessionId]);
 
     const toggleListening = useCallback(() => {
-        setListening((value => !value));
-    }, [setListening]);
+        if (isListening) {
+            setListening(false);
+            setSessionId(null);
+        } else {
+            setListening(true);
+            setSessionId(nanoid());
+            setContent('');
+        }
+    }, [isListening, setSessionId, setListening]);
 
 
     useEffect(() => {
@@ -63,7 +74,7 @@ const App = () => {
             <br/>
             <Row>
                 <Col span={16}>
-                    <Typography.Paragraph>{content}</Typography.Paragraph>
+                    <Typography.Paragraph style={TEXT_STYLE}>{content}</Typography.Paragraph>
                 </Col>
             </Row>
         </>
