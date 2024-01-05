@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Col, Flex, Row, Typography } from 'antd';
+import { Button, Flex } from 'antd';
 import { PauseOutlined, CaretRightOutlined } from '@ant-design/icons';
 import { socket } from './socket';
 import { nanoid } from 'nanoid';
+import Highlighter from 'react-highlight-words';
 
 import './App.css';
 import SpeechListener from './components/SpeechListener';
-
-const TEXT_STYLE = { color: '#fff' };
 
 const App = () => {
     const [isListening, setListening] = useState(false);
     const [sessionId, setSessionId] = useState();
     const [isConnected, setIsConnected] = useState(socket.connected);
     const [content, setContent] = useState('');
+    const [keywords, setKeywords] = useState([]);
 
     const onChunk = useCallback((data) => {
         socket.emit('audio', { sessionId, data });
@@ -27,6 +27,7 @@ const App = () => {
             setListening(true);
             setSessionId(nanoid());
             setContent('');
+            setKeywords([]);
         }
     }, [isListening, setSessionId, setListening]);
 
@@ -42,8 +43,9 @@ const App = () => {
             setIsConnected(false);
         }
 
-        function onRecognized(value) {
-            setContent((str) => str.concat(value));
+        function onRecognized(message) {
+            setContent((str) => str.concat(message.recognized));
+            setKeywords(message.keywords);
         }
 
         socket.on('connect', onConnect);
@@ -60,7 +62,7 @@ const App = () => {
     return (
         <>
             <SpeechListener isListening={isListening} onChunk={onChunk} />
-            <Flex justify='center' >
+            <Flex justify='center'>
                 <Button
                     type="primary"
                     danger={isListening}
@@ -72,11 +74,14 @@ const App = () => {
                 </Button>
             </Flex>
             <br/>
-            <Row>
-                <Col span={16}>
-                    <Typography.Paragraph style={TEXT_STYLE}>{content}</Typography.Paragraph>
-                </Col>
-            </Row>
+            <Flex justify='center'>
+                <Highlighter
+                    className='highlighted-content'
+                    searchWords={keywords}
+                    textToHighlight={content}
+                >
+                </Highlighter>
+            </Flex>
         </>
     );
 }

@@ -8,39 +8,41 @@ const SpeechListener = ({ isListening, onChunk }) => {
 
     useEffect(() => {
         const func = async (isListening) => {
-            if (recorderRef.current === null) {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorderRef.current = new Recorder(stream);
-                timeRef.current = Date.now();
+            if (isListening) {
+                if (recorderRef.current === null) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    recorderRef.current = new Recorder(stream);
+                    timeRef.current = Date.now();
 
-                const speechEvents = hark(stream, {});
-                speechEvents.on('speaking', () => {
-                    console.info('speech start detected');
-                });
-                speechEvents.on('stopped_speaking', () => {
-                    console.info('speech stop detected');
-                    const now = Date.now();
-                    if (now - timeRef.current > 2000) {
-                        console.info('swap recorders');
-                        if (recorderRef.current) {
-                            recorderRef.current.swap();
-                            timeRef.current = now;
-                        } else {
-                            timeRef.current = 0;
+                    const speechEvents = hark(stream, {});
+                    speechEvents.on('speaking', () => {
+                        console.info('speech start detected');
+                    });
+                    speechEvents.on('stopped_speaking', () => {
+                        console.info('speech stop detected');
+                        const now = Date.now();
+                        if (now - timeRef.current > 2000) {
+                            console.info('swap recorders');
+                            if (recorderRef.current) {
+                                recorderRef.current.swap();
+                                timeRef.current = now;
+                            } else {
+                                timeRef.current = 0;
+                            }
                         }
-                    }
-                });
+                    });
 
-                recorderRef.current.ondataavailable = (e) => {
-                    console.info(`recorded chunk, ${Math.round(e.timeStamp)/1000}s`);
-                    const blob = new Blob([e.data], { type: "audio/webm" });
-                    onChunk(blob);
-                };
+                    recorderRef.current.ondataavailable = (e) => {
+                        console.info(`recorded chunk, ${Math.round(e.timeStamp)/1000}s`);
+                        const blob = new Blob([e.data], { type: "audio/webm" });
+                        onChunk(blob);
+                    };
+                }
+
+                recorderRef.current.start();
             }
 
-            if (isListening) {
-                recorderRef.current.start()
-            } else {
+            if (!isListening && recorderRef.current !== null) {
                 recorderRef.current.stop();
                 recorderRef.current = null;
             }

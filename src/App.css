@@ -1,4 +1,17 @@
 #root {
-  max-width: 768px;
+  max-width: 600px;
   margin: 0 auto;
+}
+
+.highlighted-content {
+  color: #fff;
+  font-family: sans-serif;
+  line-height: 24px;
+  font-size: 16px;
+}
+
+.highlighted-content mark {
+  background-color: #a94c06;
+  color: #faf2eb;
+  font-weight: 700;
 }
